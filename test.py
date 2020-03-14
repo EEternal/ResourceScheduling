@@ -2,6 +2,7 @@ import sys
 import random
 import numpy as np
 from collections import deque
+from threading import Timer
 
 E = 5																# 所有的边缘服务器数目
 Vn = 27					    										# 数据率
@@ -94,7 +95,10 @@ def choose_es(val1, val2):
 
 
 def delete_task_in_queue(val1, val2):
-    pass
+    def tmp(x):
+        que[x - 1].popleft()
+        # print('时间'+str(val2)+'后结束')
+    Timer(val2, tmp, (val1, )).start()
 
 
 if __name__ == '__main__':
