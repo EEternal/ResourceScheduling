@@ -98,7 +98,7 @@ def delete_task_in_queue(val1, val2):
     def tmp(x):
         que[x - 1].popleft()
         # print('时间'+str(val2)+'后结束')
-    Timer(val2, tmp, (val1, )).start()
+    Timer(val2, tmp, [val1]).start()
 
 
 if __name__ == '__main__':
