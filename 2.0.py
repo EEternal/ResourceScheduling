@@ -7,7 +7,7 @@ from threading import Timer
 
 E = 50																# 所有的边缘服务器数目
 Vn = 27					    										# 数据率
-REQUIREMENT = 7													    # 时间约束
+REQUIREMENT = 4													    # 时间约束
 Es = list()					                						# 供选的边缘服务器集合
 comm_Energy = 1                                                     # 通信能耗
 comp_Energy = [1.181, 1.19, 0.842, 0.988, 1.029, 1.061, 1.022, 0.806, 1.087, 0.982, 1.057, 0.85,
@@ -43,6 +43,7 @@ def initial():
 
 
 def sae(t):
+    result = None
     for i in range(E):
         t.com_t[i] = (t.task_size + t.result) / Vn
         t.process_t[i] = t.target / performance[i]
@@ -74,23 +75,40 @@ def sae(t):
             if tmp < flag:
                 flag = tmp
                 result = Es[i]
+        choose_es(result, t.sum_t)
+        delete_task_in_queue(result, t.sum_t)
         return result
 
 
 def cec(t):
     IN = dict()
     temp_sum = 0
+    weight = dict()
     result = list()
     for i in range(E):
         for j in range(len(que[i])):
             t.que_t[i] += que[i][j]
         instructions = (REQUIREMENT - t.que_t[i] - t.com_t[i]) * performance[i]
         IN[i] = instructions
-    desc = select_main_es(IN)
-    # main_Es = desc[0][0]
-    # 最好的边缘服务器参与计算
+    # desc = select_main_es(IN)
+    # for i in range(E):
+    #     temp_sum += desc[i][1]
+    #     result.append(desc[i][0] + 1)
+    #     if temp_sum > t.target:
+    #         break
+    # # divide
+    # for i in range(len(result)):
+    #     t_task = REQUIREMENT - t.que_t[result[i] - 1]
+    #     choose_es(result[i], t_task)
+    #     delete_task_in_queue(result[i], t_task)
+    # # merge
+    norm_instructions = normalization(list(IN.values()))
+    norm_energy = normalization(1 / t.energy)
     for i in range(E):
-        temp_sum += desc[i][1]
+        weight[i] = (0.5 * norm_instructions[i] + 0.5 * norm_energy[i])
+    desc = select_main_es(weight)
+    for i in range(E):
+        temp_sum += IN[desc[i][0] + 1]
         result.append(desc[i][0] + 1)
         if temp_sum > t.target:
             break
@@ -136,6 +154,7 @@ if __name__ == '__main__':
     result1 = sae(task)
     if result1 != -1:
         print("SAE选中的边缘服务器序号是" + str(result1))
+        print("能耗：" + str(task.energy[result1-1]))
         end = time.perf_counter()
         print(end - start)
         sys.exit()
